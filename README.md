@@ -18,13 +18,15 @@
 | [WORKLOG.md](WORKLOG.md) | 只追加的工程记录：为什么修改、验证了什么、还缺什么 |
 | [.gitignore](.gitignore) | 凭据、本地配置、依赖、构建产物、运行数据及大文件排除 |
 | [.gitattributes](.gitattributes) | 文本换行及二进制文件处理规则 |
+| [git-practice/README.md](git-practice/README.md) | 实习生允许提交的文件、个人练习分支、提交/推送/PR 步骤与验收 |
+| [git-practice/practice.md](git-practice/practice.md) | 待练习者填写的真实 Git 学习记录模板 |
 
 ## 位置与版本管理
 
 - 权威源码目录：`D:\Projects\School\ai辅助软件开发实践\期末大作业\项目`。
 - GitHub：[SuMeidan/fragrance-mall-final](https://github.com/SuMeidan/fragrance-mall-final)，私有仓库；由原校园图书名称改名，仓库身份和历史保留。
 - 本地主分支：`main`；远程名：`origin`。
-- 首次创建、连接和工程文档推送已完成；后续远程推送、部署按对应任务授权执行。
+- 首次创建、连接和工程文档推送已完成；本次已获授权将香氛方向文档与 Git 练习区推送到远程，实际同步结果以 WORKLOG 最新验收记录为准；部署按对应任务授权执行。
 - 期末项目独立于实验四教学管理系统，两者的源码、数据与运行环境各自管理。
 
 在项目目录可使用以下已验证的检查命令：
@@ -36,11 +38,11 @@ git log --oneline -12
 git diff --check
 ```
 
-远程克隆入口是 `git clone https://github.com/SuMeidan/fragrance-mall-final.git`，私有仓库需要相应访问权限。首次工程文件已同步；本次方向文档先在本地独立提交，后续推送按任务授权执行。仓库连接检查不等于应用启动验证。
+远程克隆入口是 `git clone https://github.com/SuMeidan/fragrance-mall-final.git`，私有仓库需要相应访问权限。文档和练习区的提交与推送记录见 [WORKLOG](WORKLOG.md)。仓库连接检查不等于应用启动验证。
 
 ## 当前目录与接口状态
 
-根目录只包含上述 9 个工程文件。应用入口、依赖清单、数据库脚本、测试和部署脚本目前均不存在，因此暂时没有应用启动命令、HTTP 接口契约或运行站点。
+根目录包含 9 个工程文件，以及 `git-practice/` 内的规则和记录模板两个文件。练习内容不参与应用运行。应用入口、依赖清单、数据库脚本、测试和部署脚本目前均不存在，因此暂时没有应用启动命令、HTTP 接口契约或运行站点。
 
 后续按实际需要增加 `backend/`、`storefront/`、`admin/`、`deploy/`、`tests/`；这些只是规划名称。本轮不创建空目录。新增时在本索引登记真实入口、依赖版本、环境变量说明、数据库迁移、测试和部署命令。
 
@@ -50,6 +52,12 @@ git diff --check
 - 课程根目录中的 `教材：AI辅助软件开发实践.pdf`，第九章为开发方法参考。
 
 仓库内的[课程要求与验收](课程要求与验收.md)保留出处和内容核对记录，远程克隆后可查看验收基线，课程原件不会随本仓库上传。
+
+## 实习生协作入口
+
+另一位实习生先阅读 [Git 练习与提交规则](git-practice/README.md)，从最新 `origin/main` 创建自己的 `practice/<GitHub用户名>` 分支，只提交规则中允许的练习文本，再发起 PR 由负责人审阅。首次编辑 [practice.md](git-practice/practice.md)，后续按需要新增自我介绍和学习笔记。
+
+实习生不能直接修改正式工程或推送 `main`，具体业务任务在练习通过后另行分配。规则尚未配置为 GitHub 平台强制限制；读权限也不等于推送权限。
 
 ## 已知缺口与下一步
 
