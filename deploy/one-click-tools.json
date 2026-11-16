@@ -1,0 +1,50 @@
+{
+  "python": {
+    "archive": "python-3.13.17-embed-amd64.zip",
+    "url": "https://www.python.org/ftp/python/3.13.17/python-3.13.17-embed-amd64.zip",
+    "sha256": "9e35319bffedab8b36ad44d8f377cb4f1733bcec257a0b6d04d94f01486ddb38",
+    "directory": "python-3.13.17",
+    "folder": ".",
+    "executable": "python.exe"
+  },
+  "java": {
+    "archive": "OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip",
+    "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip",
+    "sha256": "f9d6e191ab098c0d416e7d588a24420a8621cd2f4720dab2459b8b7b2d2d8b4e",
+    "directory": "java21",
+    "folder": "jdk-21.0.12.1+1",
+    "executable": "bin/java.exe"
+  },
+  "mysql": {
+    "archive": "mysql-8.4.11-winx64.zip",
+    "url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.11-winx64.zip",
+    "sha256": "a492371d687d2bab088b0062581144a0044b8964baefdf4faa579292b423d25c",
+    "directory": "mysql84",
+    "folder": "mysql-8.4.11-winx64",
+    "executable": "bin/mysqld.exe"
+  },
+  "node": {
+    "archive": "node-v24.22.0-win-x64.zip",
+    "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-win-x64.zip",
+    "sha256": "f9683a19877e12a9b167305c8db71040d812876359de21f0d2e97c3f321f80c3",
+    "directory": "node24",
+    "folder": "node-v24.22.0-win-x64",
+    "executable": "node.exe"
+  },
+  "nginx": {
+    "archive": "nginx-1.31.7.zip",
+    "url": "https://nginx.org/download/nginx-1.31.7.zip",
+    "sha256": "7c717ccf861f8925be64431d06d57634512a5014bcc8d149f279928f5e8151bf",
+    "directory": "nginx",
+    "folder": "nginx-1.31.7",
+    "executable": "nginx.exe"
+  },
+  "maven": {
+    "sha256": "1f6d9909266510f039f59aa0e13dcd2c66da85f043e56276e41f2918f8bddaff",
+    "archive": "apache-maven-3.10.0-bin.zip",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.10.0/apache-maven-3.10.0-bin.zip",
+    "executable": "bin/mvn.cmd",
+    "directory": "maven",
+    "folder": "apache-maven-3.10.0"
+  }
+}

@@ -1,0 +1,25 @@
+name: Web verification
+on:
+  push:
+    paths: ['apps/storefront/**', 'apps/admin/**', 'apps/web-shared/**', 'package*.json', '.github/workflows/web.yml']
+  pull_request:
+    paths: ['apps/storefront/**', 'apps/admin/**', 'apps/web-shared/**', 'package*.json', '.github/workflows/web.yml']
+permissions:
+  contents: read
+jobs:
+  vue-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6, verified 2026-10-15
+        with:
+          node-version: '24.22.0'
+          cache: npm
+      - run: npm install --global npm@11.19.1
+      - run: npm ci --no-fund
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm audit --audit-level=high --registry=https://registry.npmjs.org

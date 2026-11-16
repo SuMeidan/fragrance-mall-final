@@ -1,0 +1,22 @@
+{
+  "javaHome": "C:/path/to/jdk-21",
+  "mysqlDir": "C:/path/to/mysql-8.4-winx64",
+  "nodeHome": "C:/path/to/node-v24.22.0-win-x64",
+  "runtimeDir": "C:/path/to/private/scent-v1-runtime",
+  "adminLogin": "scent-admin",
+  "adminPassword": "",
+  "nginxHome": "C:/absolute/private/tools/nginx-1.31.7",
+  "bailianBaseUrl": "",
+  "bailianAgentId": "",
+  "bailianEnvironmentId": "",
+  "bailianAgentVersion": "",
+  "bailianMcpServerId": "",
+  "bailianKeyFile": "",
+  "mcpTokenFile": "",
+  "alipayAppId": "",
+  "alipaySellerId": "",
+  "alipayPrivateKeyFile": "",
+  "alipayPublicKeyFile": "",
+  "publicOrigin": "http://127.0.0.1:15183",
+  "notifyOrigin": ""
+}

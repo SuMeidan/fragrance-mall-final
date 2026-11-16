@@ -1,0 +1,118 @@
+name: API verification
+on:
+  push:
+    paths: ['apps/**', 'tests/**', 'package*.json', 'deploy/v1.py', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['apps/**', 'tests/**', 'package*.json', 'deploy/v1.py', '.github/workflows/api.yml']
+permissions:
+  contents: read
+jobs:
+  mysql-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4.11
+        env:
+          MYSQL_DATABASE: scent_ci_it
+          MYSQL_USER: scent_ci
+          MYSQL_PASSWORD: ci-only-password
+          MYSQL_ROOT_PASSWORD: ci-only-root-password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      SCENT_DB_URL: jdbc:mysql://127.0.0.1:3306/scent_ci_it?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useSSL=false&allowPublicKeyRetrieval=true
+      SCENT_DB_USER: scent_ci
+      SCENT_DB_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api/pom.xml
+      - name: Unit and real MySQL HTTP integration tests
+        working-directory: apps/api
+        run: |
+          ./mvnw -B -ntp verify
+          test -s target/site/jacoco/jacoco.xml
+          python3 - <<'PY'
+          import xml.etree.ElementTree as E
+          root=E.parse('target/site/jacoco/jacoco.xml').getroot()
+          for kind in ('LINE','BRANCH'):
+              counter=next(c for c in root.findall('counter') if c.get('type')==kind)
+              covered,missed=int(counter.get('covered')),int(counter.get('missed'))
+              assert covered>0 and covered+missed>0
+              print(f'Coverage {kind}: {covered}/{covered+missed} ({covered*100/(covered+missed):.2f}%)')
+          PY
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.0'
+          cache: npm
+      - run: npm install --global npm@11.19.1
+      - run: npm ci --no-fund
+      - run: npm run build
+      - name: Select browser for the complete regression suite
+        run: |
+          if command -v google-chrome >/dev/null; then
+            google-chrome --version
+            echo "SCENT_BROWSER_CHANNEL=chrome" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Start isolated browser database and applications
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        run: |
+          docker exec -e MYSQL_PWD=ci-only-root-password "$MYSQL_CONTAINER" mysql -uroot -e "CREATE DATABASE scent_ci_browser CHARACTER SET utf8mb4; GRANT ALL ON scent_ci_browser.* TO 'scent_ci'@'%';"
+          SCENT_DB_URL='jdbc:mysql://127.0.0.1:3306/scent_ci_browser?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useSSL=false&allowPublicKeyRetrieval=true' SCENT_ADMIN_LOGIN=integration-admin SCENT_ADMIN_PASSWORD='V1TestPass123!' SPRING_PROFILES_ACTIVE=dev SCENT_DOCS=false SCENT_MEDIA_DIRECTORY="$RUNNER_TEMP/scent-uploads" java -jar apps/api/target/scent-api-0.1.0-SNAPSHOT.jar > "$RUNNER_TEMP/scent-api.log" 2>&1 &
+          npm run dev --workspace=@scent/storefront > "$RUNNER_TEMP/storefront.log" 2>&1 &
+          npm run dev --workspace=@scent/admin > "$RUNNER_TEMP/admin.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:28049/actuator/health >/dev/null && curl --fail --silent http://127.0.0.1:15183/ >/dev/null && curl --fail --silent http://127.0.0.1:15184/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Real buyer and administrator browser chain
+        env:
+          SCENT_BROWSER_ORIGIN: http://127.0.0.1:15183
+          SCENT_ADMIN_ORIGIN: http://127.0.0.1:15184/
+          SCENT_ADMIN_LOGIN: integration-admin
+          SCENT_ADMIN_PASSWORD: V1TestPass123!
+          SCENT_BROWSER_EVIDENCE: ${{ runner.temp }}/scent-browser
+        run: npm run browser:check
+      - name: Retain bounded verification evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2, verified from official tag
+        with:
+          name: v1-verification-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            apps/api/target/scent-api-0.1.0-SNAPSHOT.jar
+            apps/storefront/dist/
+            apps/admin/dist/
+            apps/api/target/surefire-reports/
+            apps/api/target/failsafe-reports/
+            apps/api/target/site/jacoco/
+            ${{ runner.temp }}/scent-browser/
+      - name: Real settlement browser HTTP and MySQL chain with isolated bank
+        working-directory: apps/api
+        env:
+          SCENT_INTERNAL_BROWSER_EVIDENCE: ${{ runner.temp }}/scent-internal-browser
+        run: ./mvnw -B -ntp test-compile org.apache.maven.plugins:maven-failsafe-plugin:3.5.6:integration-test org.apache.maven.plugins:maven-failsafe-plugin:3.5.6:verify -Dit.test=SettlementBrowserCheck
+      - name: Retain internal settlement verification evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2, verified from official tag
+        with:
+          name: internal-settlement-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            apps/api/target/failsafe-reports/TEST-io.scent.SettlementBrowserCheck.xml
+            ${{ runner.temp }}/scent-internal-browser/

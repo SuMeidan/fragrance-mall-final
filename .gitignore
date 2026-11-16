@@ -1,0 +1,67 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+.ssh/
+secrets/
+application-local.*
+application-secret.*
+application-secrets.*
+
+# Dependencies and build output
+node_modules/
+target/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+.gradle/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Runtime and temporary data
+runtime/
+data/
+uploads/
+backups/
+logs/
+tmp/
+temp/
+*.log
+*.pid
+*.dump
+*.db
+*.sqlite*
+
+# Local tools and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+~$*
+
+# Large course media and generated release bundles
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# Keep SQL migrations, demo seeds, source maps of the project, and small evidence files trackable.

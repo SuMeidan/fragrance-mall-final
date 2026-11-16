@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+ * 严肃声明：
+ * 开源版本请务必保留此注释头信息，若删除我方将保留所有法律责任追究！
+ * 本软件已申请软件著作权，受国家版权局知识产权以及国家计算机软件著作权保护！
+ * 可正常分享和学习源码，不得用于违法犯罪活动，违者必究！
+ * Copyright (c) 2019-2021 十三 all rights reserved.
+ * 版权所有，侵权必究！
+ * SCENT: adapted product filtering, count and fixed-goods CRUD patterns from
+ * newbee-mall-api 859e28ab6ae6861fb8a4a16b8e75604bce3038e5 / T09 candidate.
+ * Names, cents, two-level category joins, scent fields and version guards changed.
+ * Upstream license is retained in apps/api/LICENSE; this is not a verbatim mapper copy.
+ -->
+<mapper namespace="io.scent.catalog.CatalogMapper">
+  <sql id="joins">
+    FROM product p JOIN category c ON c.id=p.category_id JOIN category parent ON parent.id=c.parent_id
+    LEFT JOIN fragrance_family f ON f.id=p.family_id
+  </sql>
+  <sql id="summary">
+    p.id,p.category_id,p.family_id,p.name,p.subtitle,p.spec,p.unit,p.price_cents,p.stock,p.active,p.version,
+    p.image_path,p.scent_image_path,p.scene_image_path,p.created_at,p.updated_at,c.name AS category_name,c.input_view,f.name AS family_name
+  </sql>
+  <sql id="filters">
+    <where>
+      <if test="!admin">p.active=TRUE AND c.enabled=TRUE AND parent.enabled=TRUE</if>
+      <if test="keyword != null">AND p.name LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'</if>
+      <if test="categoryId != null">AND (p.category_id=#{categoryId} OR c.parent_id=#{categoryId})</if>
+      <if test="familyId != null">AND p.family_id=#{familyId}</if>
+      <if test="unscented">AND p.family_id IS NULL</if>
+    </where>
+  </sql>
+  <select id="list" resultType="io.scent.catalog.Product">
+    SELECT <include refid="summary"/> <include refid="joins"/> <include refid="filters"/>
+    ORDER BY
+    <choose>
+      <when test="sort == 'price_asc'">p.price_cents ASC,p.id DESC</when>
+      <when test="sort == 'price_desc'">p.price_cents DESC,p.id DESC</when>
+      <otherwise>p.id DESC</otherwise>
+    </choose>
+    LIMIT #{size} OFFSET #{offset}
+  </select>
+  <select id="homeProducts" resultType="io.scent.catalog.Product">
+    SELECT <include refid="summary"/>,p.description,p.usage_notes,p.material,p.power_info,p.contents
+    <include refid="joins"/>
+    WHERE p.active=TRUE AND c.enabled=TRUE AND parent.enabled=TRUE AND p.stock&gt;0
+      AND p.category_id IN (101,102,203,401,402,403,504)
+    ORDER BY p.id IN (1001,1005,1010,1014,1015,1016,1021,2015,2051,2052) DESC,p.id DESC LIMIT 80
+  </select>
+  <select id="count" resultType="long">
+    SELECT COUNT(*) <include refid="joins"/> <include refid="filters"/>
+  </select>
+  <select id="find" resultType="io.scent.catalog.Product">
+    SELECT <include refid="summary"/>,p.description,p.usage_notes,p.material,p.power_info,p.contents
+    <include refid="joins"/> WHERE p.id=#{id}
+    <if test="!admin">AND p.active=TRUE AND c.enabled=TRUE AND parent.enabled=TRUE</if>
+  </select>
+  <!-- Fixed read-only advisor query: never accept SQL or admin visibility from a model. -->
+  <sql id="advisorFilters">
+    WHERE p.active=TRUE AND c.enabled=TRUE AND parent.enabled=TRUE AND p.stock&gt;0
+    <if test="keyword != null">
+      AND (p.name LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'
+        OR p.subtitle LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'
+        OR p.description LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'
+        OR c.name LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'
+        OR parent.name LIKE CONCAT('%',#{keyword},'%') ESCAPE '!'
+        OR f.name LIKE CONCAT('%',#{keyword},'%') ESCAPE '!')
+    </if>
+    <if test="categoryId != null">AND (p.category_id=#{categoryId} OR c.parent_id=#{categoryId})</if>
+    <if test="familyId != null">AND p.family_id=#{familyId}</if>
+    <if test="minPriceCents != null">AND p.price_cents&gt;=#{minPriceCents}</if>
+    <if test="maxPriceCents != null">AND p.price_cents&lt;=#{maxPriceCents}</if>
+  </sql>
+  <select id="advisorList" resultType="io.scent.catalog.Product">
+    SELECT <include refid="summary"/>,p.description <include refid="joins"/> <include refid="advisorFilters"/>
+    ORDER BY p.price_cents ASC,p.id ASC LIMIT #{size} OFFSET #{offset}
+  </select>
+  <select id="advisorCount" resultType="long">
+    SELECT COUNT(*) <include refid="joins"/> <include refid="advisorFilters"/>
+  </select>
+  <select id="related" resultType="io.scent.catalog.Product">
+    SELECT <include refid="summary"/> <include refid="joins"/>
+    JOIN product_compatibility r ON (r.product_id=#{id} AND r.related_product_id=p.id) OR (r.related_product_id=#{id} AND r.product_id=p.id)
+    <if test="!admin">WHERE p.active=TRUE AND c.enabled=TRUE AND parent.enabled=TRUE</if>
+    ORDER BY p.id
+  </select>
+  <insert id="create" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO product(category_id,family_id,name,subtitle,spec,unit,price_cents,stock,active,image_path,scent_image_path,scene_image_path,description,usage_notes,material,power_info,contents)
+    VALUES(#{categoryId},#{familyId},#{name},#{subtitle},#{spec},#{unit},#{priceCents},#{stock},#{active},#{imagePath},#{scentImagePath},#{sceneImagePath},#{description},#{usageNotes},#{material},#{powerInfo},#{contents})
+  </insert>
+  <update id="update">
+    UPDATE product SET category_id=#{categoryId},family_id=#{familyId},name=#{name},subtitle=#{subtitle},spec=#{spec},unit=#{unit},
+      price_cents=#{priceCents},active=#{active},image_path=#{imagePath},scent_image_path=#{scentImagePath},scene_image_path=#{sceneImagePath},description=#{description},usage_notes=#{usageNotes},
+      material=#{material},power_info=#{powerInfo},contents=#{contents},version=version+1
+    WHERE id=#{id} AND version=#{version}
+  </update>
+</mapper>

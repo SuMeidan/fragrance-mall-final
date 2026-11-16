@@ -1,0 +1,28 @@
+{
+  "name": "scent-web",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "workspaces": [
+    "apps/storefront",
+    "apps/admin"
+  ],
+  "engines": {
+    "node": ">=24.22.0 <25",
+    "npm": ">=11.19.1 <12"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "browser:check": "node tests/v1-browser.cjs",
+    "check": "npm run check --workspaces",
+    "build": "npm run build --workspaces",
+    "format:check": "prettier --check \"apps/{storefront,admin}/src/**/*.{ts,vue,css}\" \"apps/web-shared/*.ts\""
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.10",
+    "playwright": "1.64.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vue-tsc": "3.3.13"
+  }
+}

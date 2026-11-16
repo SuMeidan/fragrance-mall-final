@@ -1,0 +1,8 @@
+{
+  "name": "@scent/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev": "vite", "check": "vue-tsc --noEmit", "build": "vue-tsc --noEmit && vite build"},
+  "dependencies": {"element-plus": "2.14.7", "vue": "3.5.44", "vue-router": "5.4.0"}
+}
